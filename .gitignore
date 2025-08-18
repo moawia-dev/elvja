@@ -1,0 +1,41 @@
+# Node / JS / TS
+node_modules/
+dist/
+build/
+coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+*.tsbuildinfo
+
+# Env & secrets
+.env
+.env.*
+!.env.example
+
+# Frontend (Vite/React)
+.vite/
+*.local
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# Uploads / cache
+uploads/
+.tmp/
+.cache/
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+
+# Docker
+*.pid
+docker-data/
