@@ -5,6 +5,7 @@ import { S3Service } from '../storage/s3.service';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import type { Express } from 'express';
 
 @UseGuards(JwtAuthGuard)
 @Controller('creatives')
