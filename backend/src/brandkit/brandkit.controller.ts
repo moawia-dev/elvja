@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Put, UploadedFile, UseGuards, UseIntercep
 import { FileInterceptor } from '@nestjs/platform-express';
 import { diskStorage } from 'multer';
 import { extname } from 'path';
+import type { Express } from 'express';
 import { JwtAuthGuard } from '../auth/jwt.guard';
 import { BrandkitService } from './brandkit.service';
 import { UpsertBrandkitDto } from './dto';
