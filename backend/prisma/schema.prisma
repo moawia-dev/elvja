@@ -1,0 +1,77 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Account {
+  id        String   @id @default(uuid())
+  name      String
+  ownerId   String?
+  campaigns Campaign[]
+  brandkit  Brandkit?
+  createdAt DateTime @default(now())
+}
+
+model Campaign {
+  id        String    @id @default(uuid())
+  name      String
+  accountId String
+  account   Account   @relation(fields: [accountId], references: [id])
+  creatives Creative[]
+  reports   Report[]
+  createdAt DateTime @default(now())
+}
+
+enum CreativeType {
+  TEXT
+  IMAGE
+  VIDEO
+}
+
+model Creative {
+  id         String       @id @default(uuid())
+  campaignId String
+  campaign   Campaign     @relation(fields: [campaignId], references: [id])
+  type       CreativeType
+  headline   String?
+  body       String?
+  imageUrl   String?
+  createdAt  DateTime @default(now())
+}
+
+model Report {
+  id          String   @id @default(uuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  periodStart DateTime
+  periodEnd   DateTime
+  metrics     Json
+}
+
+model Brandkit {
+  id        String   @id @default(uuid())
+  accountId String   @unique
+  account   Account  @relation(fields: [accountId], references: [id])
+  primary   String   @default("#6B8355")
+  secondary String   @default("#A3B18A")
+  font      String?
+  logoUrl   String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("user")
+  accounts  Account[] @relation("AccountUsers")
+  createdAt DateTime @default(now())
+}
+
+// Update Account to have users

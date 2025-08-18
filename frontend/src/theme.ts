@@ -1,0 +1,2 @@
+export function getInitialTheme(){ const s=localStorage.getItem('elvja_theme'); if(s==='dark'||s==='light') return s as 'dark'|'light'; return window.matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light' }
+export function applyTheme(t:'light'|'dark'){ const root=document.documentElement; if(t==='dark') root.classList.add('dark'); else root.classList.remove('dark'); localStorage.setItem('elvja_theme', t) }

@@ -1,0 +1,16 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+.btn{ @apply px-3 py-2 rounded-xl bg-gray-100 text-gray-900; }
+.btn-primary{ @apply bg-green-700 text-white; }
+.input{ @apply px-3 py-2 rounded-xl border border-gray-300 w-full; }
+.card{ @apply p-4 rounded-2xl border border-gray-200 bg-white; }
+.label{ @apply text-sm text-gray-500; }
+.prose p { margin: 0.35rem 0; }
+:root{ --elvja-ink:#0b0e14; --elvja-sand:#f8f7f3; --elvja-moss:#6B8355; }
+.dark body { background-color: #0B0E14; }
+.dark .card { background-color: #121826; color: #E5E7EB; }
+.dark .btn { background-color: #1F2937; color: #E5E7EB; }
+.dark .btn-primary { background-color: #6B8355; color: #fff; }
+.dark .input { background-color: #0F1623; border-color: #1F2937; color: #E5E7EB; }
+.dark .label { color: #9CA3AF; }

@@ -1,0 +1,37 @@
+version: "3.9"
+services:
+  db:
+    image: postgres:16
+    environment: { POSTGRES_PASSWORD: postgres, POSTGRES_DB: elvja }
+    volumes: [ "pgdata:/var/lib/postgresql/data" ]
+  redis: { image: redis:7 }
+  backend:
+    image: ${BACKEND_IMAGE}
+    environment:
+      DATABASE_URL: postgresql://postgres:postgres@db:5432/elvja?schema=public
+      PORT: 3000
+      S3_BUCKET: ${S3_BUCKET}
+      S3_REGION: ${S3_REGION}
+      CDN_BASE: ${CDN_BASE}
+    depends_on: [ db, redis ]
+  frontend:
+    image: ${FRONTEND_IMAGE}
+    environment: { VITE_API_URL: https://${DOMAIN}/api }
+  proxy:
+    image: nginx:1.27
+    depends_on: [ backend, frontend ]
+    ports: [ "80:80", "443:443" ]
+    environment: { DOMAIN: ${DOMAIN} }
+    volumes:
+      - ./proxy/nginx.tmpl:/etc/nginx/nginx.tmpl:ro
+      - ./proxy/entrypoint.sh:/entrypoint.sh:ro
+      - ./proxy/html:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt
+    entrypoint: ["/bin/sh","/entrypoint.sh"]
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - ./proxy/html:/var/www/certbot
+      - /etc/letsencrypt:/etc/letsencrypt
+    entrypoint: /bin/sh -c "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --agree-tos --email ${EMAIL} --non-interactive || true; sleep 12h & wait $$!; done"
+volumes: { pgdata: {} }
