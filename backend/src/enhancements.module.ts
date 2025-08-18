@@ -1,5 +1,5 @@
-import { Module, Injectable, NestInterceptor, ExecutionContext, CallHandler, Controller, Post, Body, Headers, Req, Get, Param, Res, UseGuards } from '@nestjs/common';
-import { APP_INTERCEPTOR, CanActivate } from '@nestjs/core';
+import { Module, Injectable, NestInterceptor, ExecutionContext, CallHandler, Controller, Post, Body, Headers, Req, Get, Param, Res, UseGuards, CanActivate } from '@nestjs/common';
+import { APP_INTERCEPTOR } from '@nestjs/core';
 import { PrismaService } from './prisma/prisma.service';
 import { Response } from 'express';
 import * as crypto from 'crypto';
