@@ -17,7 +17,11 @@ export class AiService {
     const base64 = Buffer.from(svg).toString('base64'); return `data:image/svg+xml;base64,${base64}`;
   }
   async suggestAudienceFromUrl(url: string) {
-    try { const res = await fetch(url, { timeout: 8000 as any }); const html = await res.text();
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), 8000);
+    try {
+      const res = await fetch(url, { signal: controller.signal });
+      const html = await res.text();
       const text = html.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ');
       const words = text.toLowerCase().match(/[a-zåäö0-9\-]{3,}/g) || [];
       const stop = new Set(['och','det','att','som','är','för','med','till','den','på','en','av','ett','har','kan','från','in','the','and','you','your','för','oss','vi']);
@@ -25,7 +29,14 @@ export class AiService {
       const top = Object.entries(freq).sort((a,b)=>b[1]-a[1]).slice(0,20).map(([k])=>k);
       const segments = top.map(k => ({ keyword: k, interest: `int:${k}`, affinity: Math.max(0.3, Math.min(0.95, (freq[k]||1)/50)) }));
       return { keywords: top, segments };
-    } catch { return { keywords: [], segments: [] }; }
+    } catch (err) {
+      if ((err as any)?.name === 'AbortError') {
+        return { keywords: [], segments: [] };
+      }
+      return { keywords: [], segments: [] };
+    } finally {
+      clearTimeout(timer);
+    }
   }
   optimizeBudget(channels: Array<{name:string, spend:number, clicks?:number, conversions?:number, revenue?:number, cpa?:number}>, target: 'roas'|'cpa'|'clicks'='roas') {
     const scored = channels.map(ch => {
