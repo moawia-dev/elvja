@@ -34,3 +34,4 @@ import { AuthService } from './auth/auth.service';
   providers: [PrismaService, JwtStrategy, AuthService]
 })
 export class AppModule {}
+export class WebhooksModule {}

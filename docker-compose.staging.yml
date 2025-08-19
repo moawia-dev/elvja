@@ -16,12 +16,14 @@ services:
     depends_on: [ db, redis ]
   frontend:
     image: ${FRONTEND_IMAGE}
-    environment: { VITE_API_URL: https://${DOMAIN}/api }
+    environment:
+      VITE_API_URL: https://${DOMAIN}/api
   proxy:
     image: nginx:1.27
     depends_on: [ backend, frontend ]
     ports: [ "80:80", "443:443" ]
-    environment: { DOMAIN: ${DOMAIN} }
+    environment:
+      DOMAIN: ${DOMAIN}
     volumes:
       - ./proxy/nginx.tmpl:/etc/nginx/nginx.tmpl:ro
       - ./proxy/entrypoint.sh:/entrypoint.sh:ro

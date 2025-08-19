@@ -1,44 +1,42 @@
-import { PrismaService } from '../prisma/prisma.service';
-import { AuthService } from './auth.service';
+// src/auth/strategies.ts
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
-import { Request } from 'express';
+import { PassportStatic } from 'passport';
 
-export function configurePassport(passport: any, prisma: PrismaService, auth: AuthService) {
-  const google = new GoogleStrategy({
-    clientID: process.env.GOOGLE_CLIENT_ID || '',
-    clientSecret: process.env.GOOGLE_CLIENT_SECRET || '',
-    callbackURL: process.env.GOOGLE_CALLBACK_URL || 'http://localhost:3000/auth/google/callback',
-    passReqToCallback: true
-  }, async (req: Request, accessToken: string, refreshToken: string, profile: any, done: any) => {
-    try {
-      const email = profile.emails?.[0]?.value;
-      const name = profile.displayName;
-      if (!email) return done(null, false);
-      const user = await auth.upsertUser(email, name);
-      // inject a token helper on req (hack to avoid DI in controller)
-      (req as any).userToken = (u: any) => auth.issueJwt(u);
-      done(null, user);
-    } catch (e) { done(e); }
-  });
-  passport.use(google);
+export function configurePassport(passport: PassportStatic) {
+  const {
+    GOOGLE_CLIENT_ID,
+    GOOGLE_CLIENT_SECRET,
+    GOOGLE_CALLBACK_URL,
+    LINKEDIN_CLIENT_ID,
+    LINKEDIN_CLIENT_SECRET,
+    LINKEDIN_CALLBACK_URL,
+  } = process.env;
 
-  const linkedin = new LinkedInStrategy({
-    clientID: process.env.LINKEDIN_CLIENT_ID || '',
-    clientSecret: process.env.LINKEDIN_CLIENT_SECRET || '',
-    callbackURL: process.env.LINKEDIN_CALLBACK_URL || 'http://localhost:3000/auth/linkedin/callback',
-    scope: ['r_emailaddress', 'r_liteprofile'],
-    passReqToCallback: true,
-    state: true
-  }, async (req: Request, accessToken: string, refreshToken: string, profile: any, done: any) => {
-    try {
-      const email = (profile as any).emails?.[0]?.value;
-      const name = profile.displayName;
-      if (!email) return done(null, false);
-      const user = await auth.upsertUser(email, name);
-      (req as any).userToken = (u: any) => auth.issueJwt(u);
-      done(null, user);
-    } catch (e) { done(e); }
-  });
-  passport.use(linkedin);
+  if (GOOGLE_CLIENT_ID && GOOGLE_CLIENT_SECRET && GOOGLE_CALLBACK_URL) {
+    passport.use(new GoogleStrategy(
+      {
+        clientID: GOOGLE_CLIENT_ID,
+        clientSecret: GOOGLE_CLIENT_SECRET,
+        callbackURL: GOOGLE_CALLBACK_URL,
+      },
+      (_accessToken, _refreshToken, profile, done) => done(null, profile),
+    ));
+  } else {
+    console.warn('Google OAuth disabled: missing GOOGLE_* envs');
+  }
+
+  if (LINKEDIN_CLIENT_ID && LINKEDIN_CLIENT_SECRET && LINKEDIN_CALLBACK_URL) {
+    passport.use(new LinkedInStrategy(
+      {
+        clientID: LINKEDIN_CLIENT_ID,
+        clientSecret: LINKEDIN_CLIENT_SECRET,
+        callbackURL: LINKEDIN_CALLBACK_URL,
+        scope: ['r_liteprofile','r_emailaddress'],
+      },
+      (_accessToken, _refreshToken, profile, done) => done(null, profile),
+    ));
+  } else {
+    console.warn('LinkedIn OAuth disabled: missing LINKEDIN_* envs');
+  }
 }

@@ -1,9 +1,18 @@
-import { Module, Injectable, NestInterceptor, ExecutionContext, CallHandler, Controller, Post, Body, Headers, Req, Get, Param, Res, UseGuards, CanActivate } from '@nestjs/common';
+import {
+  Module, Injectable, CanActivate, ExecutionContext,
+  Controller, Get, Param, Res, UseGuards, NestInterceptor, CallHandler
+} from '@nestjs/common';
 import { APP_INTERCEPTOR } from '@nestjs/core';
-import { PrismaService } from './prisma/prisma.service';
 import { Response } from 'express';
 import * as crypto from 'crypto';
-import { JwtAuthGuard } from './auth/jwt.guard';
+import { Observable } from 'rxjs';
+import { tap } from 'rxjs/operators';
+
+import { PrismaModule } from './prisma/prisma.module';
+import { PrismaService } from './prisma/prisma.service';
+
+// If/when auth is ready, re-enable this and import your AuthModule.
+// import { JwtAuthGuard } from '../auth/jwt.guard';
 
 function timingSafeEqual(a: string, b: string): boolean {
   const ba = Buffer.from(a); const bb = Buffer.from(b);
@@ -34,42 +43,58 @@ export class SignatureService {
 }
 
 @Injectable()
-export class AuditInterceptor implements NestInterceptor {
-  constructor(private prisma: PrismaService) {}
-  async intercept(context: ExecutionContext, next: CallHandler) {
-    const req: any = context.switchToHttp().getRequest();
-    // eslint-disable-next-line no-console
-    console.log('[AUDIT]', req.method, req.originalUrl || req.url, { userId: req?.user?.sub });
-    return next.handle();
-  }
-}
-
-@Injectable()
 export class OwnershipGuard implements CanActivate {
   constructor(private prisma: PrismaService) {}
-  async canActivate(context: ExecutionContext): Promise<boolean> {
-    const req: any = context.switchToHttp().getRequest();
-    const userId = req?.user?.sub; if (!userId) return false;
+  async canActivate(ctx: ExecutionContext): Promise<boolean> {
+    const req: any = ctx.switchToHttp().getRequest();
+    const userId = req?.user?.sub; // when auth is wired
     const accountId = req.params?.accountId || req.query?.accountId || req.body?.accountId;
     const campaignId = req.params?.id || req.params?.campaignId || req.body?.campaignId;
-    // Simplified: allow if provided; real check via prisma omitted for brevity
+    // TODO: use prisma to verify ownership by userId
     return !!(accountId || campaignId);
   }
 }
 
+@Injectable()
+export class AuditInterceptor implements NestInterceptor {
+  constructor(private readonly prisma: PrismaService) {}
+  intercept(context: ExecutionContext, next: CallHandler): Observable<any> {
+    const start = Date.now();
+    return next.handle().pipe(
+      tap(async () => {
+        // placeholder audit - safe no-op
+        await this.prisma.$executeRawUnsafe('select 1');
+        // console.log(`[AUDIT] ${Date.now() - start}ms`);
+      }),
+    );
+  }
+}
+
 @Controller('reports')
-@UseGuards(JwtAuthGuard, OwnershipGuard)
+// Re-enable JwtAuthGuard later: @UseGuards(JwtAuthGuard, OwnershipGuard)
+@UseGuards(OwnershipGuard)
 export class ReportsExtraController {
   constructor(private prisma: PrismaService) {}
+
   @Get(':campaignId/csv')
   async csv(@Param('campaignId') campaignId: string, @Res() res: Response) {
-    const rows = await this.prisma.report.findMany({ where: { campaignId }, orderBy: { periodStart: 'asc' } });
+    const rows = await this.prisma.report.findMany({
+      where: { campaignId },
+      orderBy: { periodStart: 'asc' },
+    });
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="report-${campaignId}.csv"`);
     res.write('period_start,period_end,impressions,clicks,ctr,spend_sek\n');
     for (const r of rows) {
       const m: any = r.metrics;
-      const line = [r.periodStart.toISOString(), r.periodEnd.toISOString(), m.impressions ?? '', m.clicks ?? '', m.ctr ?? '', m.spendSek ?? ''].join(',');
+      const line = [
+        r.periodStart.toISOString(),
+        r.periodEnd.toISOString(),
+        m.impressions ?? '',
+        m.clicks ?? '',
+        m.ctr ?? '',
+        m.spendSek ?? '',
+      ].join(',');
       res.write(line + '\n');
     }
     res.end();
@@ -77,7 +102,15 @@ export class ReportsExtraController {
 }
 
 @Module({
-  providers: [{ provide: APP_INTERCEPTOR, useClass: AuditInterceptor }, SignatureService, OwnershipGuard],
-  controllers: [ReportsExtraController]
+  imports: [PrismaModule],
+  providers: [
+    { provide: APP_INTERCEPTOR, useClass: AuditInterceptor },
+    SignatureService,
+    OwnershipGuard,
+  ],
+  controllers: [ReportsExtraController],
+  exports: [SignatureService], // <-- add this line
 })
 export class EnhancementsModule {}
+
+

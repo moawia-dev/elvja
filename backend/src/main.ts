@@ -7,7 +7,7 @@ import { configurePassport } from './auth/strategies';
 import * as express from 'express';
 import * as cookieParser from 'cookie-parser';
 import helmet from 'helmet';
-import compression from 'compression';
+import * as compression from 'compression';
 
 import { ValidationPipe } from '@nestjs/common';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
