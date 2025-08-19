@@ -27,10 +27,7 @@ export const Layout: React.FC = () => {
           {navLink('/editor', 'Annonseditor')}
           {navLink('/ai', 'AI-verktyg')}
         </nav>
-        <div className="absolute bottom-4 left-4 right-4 flex items-center gap-2">
-          <button className="btn flex-1" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>{theme === 'dark' ? 'Ljust läge' : 'Mörkt läge'}</button>
-          <button className="btn btn-primary flex-1" onClick={logout}>Logga ut</button>
-        </div>
+        
       </aside>
       <main className="p-6"><Outlet /></main>
     </div>
