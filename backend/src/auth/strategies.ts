@@ -2,8 +2,10 @@
 import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
 import { Strategy as LinkedInStrategy } from 'passport-linkedin-oauth2';
 import { PassportStatic } from 'passport';
+import { PrismaService } from 'src/prisma/prisma.service';
+import { AuthService } from './auth.service';
 
-export function configurePassport(passport: PassportStatic) {
+export function configurePassport(passport: PassportStatic, prisma?: PrismaService, auth?: AuthService) {
   const {
     GOOGLE_CLIENT_ID,
     GOOGLE_CLIENT_SECRET,

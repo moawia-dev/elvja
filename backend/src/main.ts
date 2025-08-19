@@ -24,7 +24,14 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser());
-  app.enableCors({ origin: true, credentials: true });
+  app.enableCors({
+  origin: [
+    'http://localhost:5173',
+    'https://elvja.vercel.app'   // replace after first deploy if you want
+  ],
+  credentials: true,
+});
+
   app.use('/uploads', express.static('uploads'));
   await app.listen(process.env.PORT || 3000);
   // eslint-disable-next-line no-console
