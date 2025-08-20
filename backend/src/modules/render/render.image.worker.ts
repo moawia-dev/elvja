@@ -1,7 +1,7 @@
 
 import fs from 'fs';
 import path from 'path';
-import sharp from 'sharp';
+import sharp from './sharp';
 export async function renderSquare({ title, tagline, outPath }:{ title:string; tagline:string; outPath:string }) {
   const width = 1080, height = 1080;
   const bg = { r: 15, g: 23, b: 42, alpha: 1 };
