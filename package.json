@@ -9,7 +9,8 @@
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev --name init",
     "prisma:seed": "prisma db seed",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node prisma/seed.ts",
+    "test": "echo \"No tests configured\""
   },
   "prisma": {
     "seed": "ts-node prisma/seed.ts"
