@@ -1,9 +1,9 @@
 
 import { Injectable } from '@nestjs/common';
-import { PrismaClient } from '@prisma/client';
+import { PrismaService } from '../../prisma/prisma.service';
 @Injectable()
 export class ReportsService {
-  constructor(private prisma: PrismaClient) {}
+  constructor(private prisma: PrismaService) {}
   async summary(tenantId: string) {
     const row = await this.prisma.reportCache.findFirst({ where: { tenantId, scope: 'summary' }, orderBy: { createdAt: 'desc' } });
     const payload = (row?.payload as any) ?? { totals: { spend: 0, clicks: 0, roasKr: 0 } };
