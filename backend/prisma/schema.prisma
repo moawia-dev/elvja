@@ -77,3 +77,101 @@ model Brandkit {
 
 
 // Update Account to have users
+enum Currency { SEK }
+enum Country { SE }
+model Tenant {
+  id           String   @id @default(cuid())
+  name         String
+  country      Country  @default(SE)
+  currency     Currency @default(SEK)
+  users        User[]
+  campaigns    Campaign[]
+  apiCreds     ApiCredential[]
+  creatives    Creative[]
+  createdAt    DateTime @default(now())
+}
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  role      String   @default("creator")
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  createdAt DateTime @default(now())
+}
+model Campaign {
+  id         String   @id @default(cuid())
+  tenantId   String
+  tenant     Tenant   @relation(fields: [tenantId], references: [id])
+  name       String
+  channel    String
+  status     String   @default("active")
+  createdAt  DateTime @default(now())
+  metrics    CampaignMetric[]
+  budgetRules BudgetRule[]
+}
+model CampaignMetric {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  date        DateTime
+  spend       Int
+  clicks      Int
+  conversions Int?
+  revenue     Int?
+  currency    Currency @default(SEK)
+}
+model ReportCache {
+  id         String   @id @default(cuid())
+  tenantId   String
+  period     String
+  scope      String
+  payload    Json
+  currency   Currency @default(SEK)
+  createdAt  DateTime @default(now())
+}
+model Creative {
+  id           String   @id @default(cuid())
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  source       String
+  title        String?
+  body         String?
+  format       String?
+  mediaAssetId String?
+  createdAt    DateTime @default(now())
+}
+model MediaAsset {
+  id        String   @id @default(cuid())
+  tenantId  String
+  url       String
+  kind      String
+  width     Int?
+  height    Int?
+  createdAt DateTime @default(now())
+}
+model ApiCredential {
+  id        String   @id @default(cuid())
+  tenantId  String
+  tenant    Tenant   @relation(fields: [tenantId], references: [id])
+  provider  String
+  payload   Json
+  createdAt DateTime @default(now())
+}
+model BudgetRule {
+  id          String   @id @default(cuid())
+  campaignId  String
+  campaign    Campaign @relation(fields: [campaignId], references: [id])
+  minDailyKr  Int
+  maxDailyKr  Int
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+}
+model JobLog {
+  id        String   @id @default(cuid())
+  type      String
+  refId     String?
+  status    String
+  details   Json?
+  createdAt DateTime @default(now())
+}
