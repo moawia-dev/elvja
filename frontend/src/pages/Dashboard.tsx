@@ -16,7 +16,9 @@ export default function Dashboard() {
   if (isLoading) return <div>Laddar…</div>
   if (isError)   return <div>Ett fel uppstod – försök igen</div>
 
-  const totals = data?.totals ?? { spend: 0, clicks: 0, roasKr: 0 }
+ const totals = isError
+    ? { spend: 0, clicks: 0, roasKr: 0 } // fallback istället för att blanka sidan
+    : (data?.totals ?? { spend: 0, clicks: 0, roasKr: 0 });
   const channels = [
     { name: 'Google',   key: 'google' },
     { name: 'Meta',     key: 'meta' },

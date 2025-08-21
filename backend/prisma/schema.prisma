@@ -7,14 +7,20 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+enum CreativeType {
+  TEXT
+  IMAGE
+  VIDEO
+}
+
 model Account {
-  id        String    @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
   ownerId   String?
   campaigns Campaign[]
   brandkit  Brandkit?
-  users     User[]    @relation("AccountUsers") // <-- add this line
-  createdAt DateTime  @default(now())
+  users     User[]     @relation("AccountUsers") // many-to-many with User
+  createdAt DateTime   @default(now())
 }
 
 model User {
@@ -22,24 +28,18 @@ model User {
   email     String    @unique
   name      String?
   role      String    @default("user")
-  accounts  Account[] @relation("AccountUsers")
+  accounts  Account[] @relation("AccountUsers") // many-to-many with Account
   createdAt DateTime  @default(now())
 }
 
 model Campaign {
-  id        String    @id @default(uuid())
+  id        String     @id @default(uuid())
   name      String
   accountId String
-  account   Account   @relation(fields: [accountId], references: [id])
+  account   Account    @relation(fields: [accountId], references: [id])
   creatives Creative[]
   reports   Report[]
-  createdAt DateTime @default(now())
-}
-
-enum CreativeType {
-  TEXT
-  IMAGE
-  VIDEO
+  createdAt DateTime   @default(now())
 }
 
 model Creative {
@@ -50,7 +50,7 @@ model Creative {
   headline   String?
   body       String?
   imageUrl   String?
-  createdAt  DateTime @default(now())
+  createdAt  DateTime     @default(now())
 }
 
 model Report {
@@ -74,104 +74,12 @@ model Brandkit {
   updatedAt DateTime @updatedAt
 }
 
-
-
-// Update Account to have users
-enum Currency { SEK }
-enum Country { SE }
-model Tenant {
-  id           String   @id @default(cuid())
-  name         String
-  country      Country  @default(SE)
-  currency     Currency @default(SEK)
-  users        User[]
-  campaigns    Campaign[]
-  apiCreds     ApiCredential[]
-  creatives    Creative[]
-  createdAt    DateTime @default(now())
-}
-model User {
-  id        String   @id @default(cuid())
-  email     String   @unique
-  name      String?
-  role      String   @default("creator")
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  createdAt DateTime @default(now())
-}
-model Campaign {
-  id         String   @id @default(cuid())
-  tenantId   String
-  tenant     Tenant   @relation(fields: [tenantId], references: [id])
-  name       String
-  channel    String
-  status     String   @default("active")
-  createdAt  DateTime @default(now())
-  metrics    CampaignMetric[]
-  budgetRules BudgetRule[]
-}
-model CampaignMetric {
-  id          String   @id @default(cuid())
-  campaignId  String
-  campaign    Campaign @relation(fields: [campaignId], references: [id])
-  date        DateTime
-  spend       Int
-  clicks      Int
-  conversions Int?
-  revenue     Int?
-  currency    Currency @default(SEK)
-}
+// Cache table for precomputed summaries (used by ReportsService)
 model ReportCache {
-  id         String   @id @default(cuid())
-  tenantId   String
-  period     String
-  scope      String
-  payload    Json
-  currency   Currency @default(SEK)
-  createdAt  DateTime @default(now())
-}
-model Creative {
-  id           String   @id @default(cuid())
-  tenantId     String
-  tenant       Tenant   @relation(fields: [tenantId], references: [id])
-  source       String
-  title        String?
-  body         String?
-  format       String?
-  mediaAssetId String?
-  createdAt    DateTime @default(now())
-}
-model MediaAsset {
   id        String   @id @default(cuid())
   tenantId  String
-  url       String
-  kind      String
-  width     Int?
-  height    Int?
-  createdAt DateTime @default(now())
-}
-model ApiCredential {
-  id        String   @id @default(cuid())
-  tenantId  String
-  tenant    Tenant   @relation(fields: [tenantId], references: [id])
-  provider  String
+  scope     String
+  period    String
   payload   Json
-  createdAt DateTime @default(now())
-}
-model BudgetRule {
-  id          String   @id @default(cuid())
-  campaignId  String
-  campaign    Campaign @relation(fields: [campaignId], references: [id])
-  minDailyKr  Int
-  maxDailyKr  Int
-  status      String   @default("active")
-  createdAt   DateTime @default(now())
-}
-model JobLog {
-  id        String   @id @default(cuid())
-  type      String
-  refId     String?
-  status    String
-  details   Json?
   createdAt DateTime @default(now())
 }
